@@ -1,24 +1,14 @@
-import logo from './logo.svg';
-import './App.css';
+// import Map from './DisplayMapClassContainer';
+import Map from './Map/';
 
 function App() {
+  const center = {
+    lat: 54.73,
+    lng: 55.97,
+  };
+  
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Map appCode="hn8nc_2Y3gsr7XMtPw4XwB3Gv4TbmmaQeD1xNOgCSGU" useHTTPS={false} center={center}/>
   );
 }
 
