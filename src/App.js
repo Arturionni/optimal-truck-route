@@ -1,4 +1,3 @@
-// import Map from './DisplayMapClassContainer';
 import Map from './Map/';
 
 function App() {

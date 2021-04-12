@@ -33,7 +33,6 @@ class Map extends Component {
     const element = document.getElementById('here-map-container')
     const { zoom, center } = this.props;
     const pixelRatio = window.devicePixelRatio || 1;
-    console.log(mapTypes)
     const map = this.factory.getHereMap(element, mapTypes.vector.normal.truck, {
       zoom,
       center,
