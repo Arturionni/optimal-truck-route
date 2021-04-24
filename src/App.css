@@ -1,0 +1,49 @@
+.space_panel { 
+	position: absolute; 
+	top: 3rem;
+	right: 3rem;
+	height: 100%;
+}
+
+.space_panel_search {
+	margin-bottom: 3rem;
+}
+
+.space_panel_area { 
+	display: grid;
+	grid-template-columns: repeat(1, 1fr);
+	gap: .5rem;
+	background: white;
+	border-radius: 1.2rem;
+	padding: 1rem; 
+}
+
+.space_panel_area_switch {
+	display: flex;
+}
+
+.switch {
+	margin-right: 1rem;
+}
+
+.red.ant-switch-checked {
+	background-color: red;
+}
+.orange.ant-switch-checked {
+	background-color: orange;
+}
+.green.ant-switch-checked {
+	background-color: green;
+}
+.lilac.ant-switch-checked {
+	background-color: rgb(120, 109, 156);
+}
+.burgundy.ant-switch-checked {
+	background-color: #9f2b29;
+}
+.yellow.ant-switch-checked {
+	background-color: yellow;
+}
+.pink.ant-switch-checked {
+	background-color: #ca23d1;
+}

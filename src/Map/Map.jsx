@@ -1,17 +1,13 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import HereMapFactory from './HereMapFactory';
 import { isEqual, isEmpty } from './utils';
-
+import points from '../data/ufa'
 
 class Map extends Component {
   constructor(props) {
     super(props);
 
-    this.factory = HereMapFactory(props.appCode);
-
-    this.platform = this.factory.getPlatform();
+    this.platform = this.props.factory.getPlatform();
 
     this.state = {
       map: null,
@@ -29,11 +25,17 @@ class Map extends Component {
   }
 
   componentDidMount() {
-    const mapTypes = this.platform.createDefaultLayers();
+    const mapTypes = this.platform.createDefaultLayers({ 
+      locale: 'ru-RU',
+      lg: 'RUS',
+      priew: 'RUS',
+      pois: 'true',
+    });
     const element = document.getElementById('here-map-container')
     const { zoom, center } = this.props;
     const pixelRatio = window.devicePixelRatio || 1;
-    const map = this.factory.getHereMap(element, mapTypes.vector.normal.truck, {
+    console.log(mapTypes)
+    const map = this.props.factory.getHereMap(element, mapTypes.vector.normal.map, {
       zoom,
       center,
       pixelRatio,
@@ -48,30 +50,22 @@ class Map extends Component {
         map,
       },
       () => {
-        // Enabling zoom and drag events
-        const behaviour = new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+        new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+        window.H.ui.UI.createDefault(map, mapTypes, 'ru-RU');
+        this.props.factory.addContextMenus(map);
 
-        // This creates the UI controls
-        window.H.ui.UI.createDefault(map, mapTypes);
-
-        // Send to parent the created map object
-        this.props.onMapLoaded(map, behaviour, this.factory);
+        points.forEach((el, index) => {
+          // if (index < 2)
+          this.props.factory.addPolylineToMap(map, el.coords, el.color);
+        });
       },
     );
   };
-
-  /*
-  * Update the center based on the props
-  */
 
   updateCenter = center => {
     if (isEmpty(center)) return;
     this.state.map.setCenter(center);
   };
-
-  /*
-  * Update the view bounds based on the props
-  */
 
   updateBounds = bounds => {
     if (isEmpty(bounds)) return;
@@ -80,7 +74,7 @@ class Map extends Component {
   };
 
   render() {
-    return <div id="here-map-container" />;
+    return <div id="here-map-container">{this.props.children}</div>;
   }
 }
 
