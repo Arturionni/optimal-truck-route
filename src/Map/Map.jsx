@@ -7,7 +7,7 @@ class Map extends Component {
   constructor(props) {
     super(props);
 
-    this.platform = this.props.factory.getPlatform();
+    this.platform = this.props.factory.platform;
 
     this.state = {
       map: null,
@@ -34,12 +34,12 @@ class Map extends Component {
     const element = document.getElementById('here-map-container')
     const { zoom, center } = this.props;
     const pixelRatio = window.devicePixelRatio || 1;
-    console.log(mapTypes)
     const map = this.props.factory.getHereMap(element, mapTypes.vector.normal.map, {
       zoom,
       center,
       pixelRatio,
     });
+    window.map = map; 
 
     this.setMap(map, mapTypes);
   }
@@ -50,14 +50,12 @@ class Map extends Component {
         map,
       },
       () => {
-        new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
         window.H.ui.UI.createDefault(map, mapTypes, 'ru-RU');
         this.props.factory.addContextMenus(map);
 
-        points.forEach((el, index) => {
-          // if (index < 2)
-          this.props.factory.addPolylineToMap(map, el.coords, el.color);
-        });
+        // points.forEach((el, index) => {
+        //   this.props.factory.addPolylineToMap(map, el.coords, el.color);
+        // });
       },
     );
   };

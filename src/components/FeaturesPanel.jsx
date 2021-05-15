@@ -5,11 +5,10 @@ import RoadSettings from './RoadSettings'
 
 const { TabPane } = Tabs;
 
-const Features = (factory) => {
-
+const Features = ({factory}) => {
 	return <div className="">
 		<Tabs type="card">
-			<TabPane tab="Свойства дорог" key="1">
+			<TabPane tab="Слои" key="1">
 				<RoadSettings factory={factory} />
 			</TabPane>
 			<TabPane tab="Построение пути" key="2">
