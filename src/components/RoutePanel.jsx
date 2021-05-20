@@ -3,6 +3,7 @@ import { Input, Button } from 'antd';
 import { TreeSelect, AutoComplete } from 'antd';
 import { Field, reduxForm } from "redux-form";
 import { AInput, AInputNumber, ATreeSelect } from '../combineAnt';
+import { useSelector } from 'react-redux'
 
 const { Option } = AutoComplete;
 
@@ -46,6 +47,7 @@ const RoutePanel = ({ handleSubmit, factory, change }) => {
 	const [suggestions2, setSuggestions2] = useState([]);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchTerm2, setSearchTerm2] = useState('');
+	const count = useSelector(state => state.main.polylineLayer)
 	const debouncedSearchTerm = useDebounce(searchTerm, 500);
 	const debouncedSearchTerm2 = useDebounce(searchTerm2, 500);
 
@@ -68,35 +70,44 @@ const RoutePanel = ({ handleSubmit, factory, change }) => {
 	const handleSearchTo = (searchText) => {
 		setSearchTerm2(searchText)
 	}
+	
+	const clearAll = (e) => {
+		e.preventDefault()
+		factory.clear()
+	}
 
 	useEffect(() => {
-		setSuggestions([])
-		factory.geocoder.search({ searchText: debouncedSearchTerm }, (result) => {
-			if (result.Response.View.length > 0 && result.Response.View[0].Result[0].Location != null) {
-				setSuggestions(result.Response.View[0].Result.map((el, i) => ({
-					i,
-					label: el.Location.Address.Label,
-					coords: el.Location.DisplayPosition,
-				})))
-				return;
-			}
+		if (debouncedSearchTerm.length > 2) {
 			setSuggestions([])
-		})
+			factory.geocoder.search({ searchText: debouncedSearchTerm }, (result) => {
+				if (result.Response.View.length > 0 && result.Response.View[0].Result[0].Location != null) {
+					setSuggestions(result.Response.View[0].Result.map((el, i) => ({
+						i,
+						label: el.Location.Address.Label,
+						coords: el.Location.DisplayPosition,
+					})))
+					return;
+				}
+				setSuggestions([])
+			})
+		}
 	}, [debouncedSearchTerm])
 
 	useEffect(() => {
-		setSuggestions2([])
-		factory.geocoder.search({ searchText: debouncedSearchTerm2 }, (result) => {
-			if (result.Response.View.length > 0 && result.Response.View[0].Result[0].Location != null) {
-				setSuggestions2(result.Response.View[0].Result.map((el, i) => ({
-					i,
-					label: el.Location.Address.Label,
-					coords: el.Location.DisplayPosition,
-				})))
-				return;
-			}
+		if (debouncedSearchTerm2.length > 2) {
 			setSuggestions2([])
-		})
+			factory.geocoder.search({ searchText: debouncedSearchTerm2 }, (result) => {
+				if (result.Response.View.length > 0 && result.Response.View[0].Result[0].Location != null) {
+					setSuggestions2(result.Response.View[0].Result.map((el, i) => ({
+						i,
+						label: el.Location.Address.Label,
+						coords: el.Location.DisplayPosition,
+					})))
+					return;
+				}
+				setSuggestions2([])
+			})
+		}
 	}, [debouncedSearchTerm2])
 
 	return <form onSubmit={handleSubmit(submit)} className="space_panel_area">
@@ -155,7 +166,11 @@ const RoutePanel = ({ handleSubmit, factory, change }) => {
 				<Field name="weightPerAxel" component={AInputNumber} min={1} />
 			</div>
 		</div>
-		<Button type="primary" htmlType="submit" shape="round">Построить маршрут</Button>
+		{
+			count > 0 ?
+			<Button type="primary" htmlType="reset" shape="round" onClick={clearAll}>Очистить маршрут</Button> :
+			<Button type="primary" htmlType="submit" shape="round">Построить маршрут</Button>
+		}
 	</form>
 }
 

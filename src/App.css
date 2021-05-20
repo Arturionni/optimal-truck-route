@@ -78,6 +78,10 @@
 	width: 20rem !important;
 }
 
+.ant-form-item-control-input {
+	min-height: 100%;
+}
+
 
 
 

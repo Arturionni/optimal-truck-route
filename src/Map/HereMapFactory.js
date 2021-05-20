@@ -1,9 +1,12 @@
-/* eslint-disable no-unreachable */
+import { actions } from '../slice'
+import { store } from '../index';
+/* eslint-disab le no-unreachable */
 /* eslint-disable import/no-anonymous-default-export */
-export default (appCode) => {
+export default (appCode, slice) => {
 	let map, mapBehavior;
 	const markerLayer = new window.H.map.Group();
 	const polylineLayer = new window.H.map.Group();
+	const roadsLayer = new window.H.map.Group();
 	const platform = new window.H.service.Platform({
 		apikey: appCode,
 	});
@@ -19,6 +22,7 @@ export default (appCode) => {
 			mapBehavior = new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
 			map.addObject(markerLayer);
 			map.addObject(polylineLayer);
+			map.addObject(roadsLayer);
 
 			return map;
 		},
@@ -50,20 +54,46 @@ export default (appCode) => {
 				);
 			});
 		},
-		addPolylineToMap(map, points, strokeColor) {
+		addRoads(roads) {
+			const filtered = roads.reduce((acc, i) => {
+				if (acc[i.color]) {
+					acc[i.color].push(i)
+				} else {
+					acc[i.color] = [i]
+				}
+				
+				return acc
+			}, {})
+
+			for (let i of Object.keys(filtered)) {
+				const layer = new window.H.map.Group()
+				filtered[i].forEach(a => this.addPolylineToMap(layer, a.coords, i))
+				layer.setRemoteId(i) 
+				layer.setVisibility()
+				roadsLayer.addObject(layer)
+			}
+		},
+		setRoadVisibility(color, visible) {
+			roadsLayer.getObjects().forEach(a => {
+				if (a.getRemoteId() === color && a.getVisibility() != visible) {
+					a.setVisibility(!a.getVisibility())
+				}
+			})
+		},
+		addPolylineToMap(layer, points, strokeColor) {
 			if (points.length > 1 && strokeColor) {
 				var lineString = new window.H.geo.LineString();
 
 				points.forEach(p => lineString.pushPoint({ lat: p[0], lng: p[1] }))
 
-				map.addObject(new window.H.map.Polyline(
+				layer.addObject(new window.H.map.Polyline(
 					lineString, { style: { lineWidth: 4, strokeColor } }
 				));
 			}
 
 			if (points.length === 1 && strokeColor) {
 				const marker = new window.H.map.Marker({ lat: points[0][0], lng: points[0][1] });
-				map.addObject(marker);
+				layer.addObject(marker);
 			}
 		},
 		calcRoute(map) {
@@ -94,11 +124,17 @@ export default (appCode) => {
 				}
 			})
 		},
+		clear() {
+			markerLayer.removeAll();
+			polylineLayer.removeAll();
+			store.dispatch(actions.setPolylineLayer(polylineLayer.getObjects().length))
+		},
 		startRouting(form) {
 			const { from, to } = form;
 			let gFrom, gTo;
 			markerLayer.removeAll();
 			polylineLayer.removeAll();
+			store.dispatch(actions.setPolylineLayer(polylineLayer.getObjects().length))
 
 			if (from && to) {
 				gFrom = null;
@@ -248,17 +284,17 @@ export default (appCode) => {
 						if (wPos.latitude == parts[0] && wPos.longitude == parts[1]) waypoints[iW].idxInStrip = i;
 					}
 				}
-				console.log(lineString)
+
 				let waypointMarkers = [];
 				for (var iW = 0, lW = waypoints.length; iW < lW; iW++) {
 					var wPos = new window.H.geo.Point(waypoints[iW].mappedPosition.latitude, waypoints[iW].mappedPosition.longitude);
 					if (!window.calcRouteTimeOutId) {
 						waypointMarkers.push(this.createWaypointMarker(wPos, wPos.lat.toFixed(5) + ", " + wPos.lng.toFixed(5), "" + (iW + 1)));
 					}
-
 				}
 
 				polylineLayer.addObject(new window.H.map.Polyline(lineString, { style: { lineWidth: 4 }}))
+				store.dispatch(actions.setPolylineLayer(polylineLayer.getObjects().length))
 
 				window.map.getViewModel().setLookAtData({
 					bounds: polylineLayer.getBoundingBox()

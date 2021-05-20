@@ -34,7 +34,7 @@ class Map extends Component {
     const element = document.getElementById('here-map-container')
     const { zoom, center } = this.props;
     const pixelRatio = window.devicePixelRatio || 1;
-    const map = this.props.factory.getHereMap(element, mapTypes.vector.normal.map, {
+    const map = this.props.factory.getHereMap(element, mapTypes.vector.normal.truck, {
       zoom,
       center,
       pixelRatio,
@@ -52,10 +52,7 @@ class Map extends Component {
       () => {
         window.H.ui.UI.createDefault(map, mapTypes, 'ru-RU');
         this.props.factory.addContextMenus(map);
-
-        // points.forEach((el, index) => {
-        //   this.props.factory.addPolylineToMap(map, el.coords, el.color);
-        // });
+        this.props.factory.addRoads(points);
       },
     );
   };

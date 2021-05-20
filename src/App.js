@@ -10,7 +10,6 @@ import axios from 'axios'
 const { Option } = AutoComplete;
 const apikey = 'TGhya0hGiNEtmGB-diwKpuyzVgEOU6D0Ein9o9BjcK0';
 
-
 function App() {
   const center = {
     lat: 54.73,

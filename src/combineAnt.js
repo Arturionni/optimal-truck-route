@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Input, Radio, Select, Checkbox, DatePicker, InputNumber, TreeSelect } from "antd";
+import { Form, Input, Radio, Select, Checkbox, DatePicker, InputNumber, TreeSelect, Switch } from "antd";
 
 export const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
@@ -64,6 +64,7 @@ const makeField = Component => ({ input, meta, children, hasFeedback, label, ...
 };
 
 export const AInput = makeField(Input);
+export const ASwitch = makeField(Switch);
 export const AInputNumber = makeField(InputNumber);
 export const AInputPassword = makeField(Input.Password);
 export const ARadioGroup = makeField(RadioGroup);
