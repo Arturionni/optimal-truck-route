@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/optimal-truck-route/static/css/main.feee7e81.chunk.css",
+    "main.js": "/optimal-truck-route/static/js/main.3750f9e6.chunk.js",
+    "main.js.map": "/optimal-truck-route/static/js/main.3750f9e6.chunk.js.map",
+    "runtime-main.js": "/optimal-truck-route/static/js/runtime-main.2e8b2c42.js",
+    "runtime-main.js.map": "/optimal-truck-route/static/js/runtime-main.2e8b2c42.js.map",
+    "static/css/2.e59a4b52.chunk.css": "/optimal-truck-route/static/css/2.e59a4b52.chunk.css",
+    "static/js/2.d18b13cc.chunk.js": "/optimal-truck-route/static/js/2.d18b13cc.chunk.js",
+    "static/js/2.d18b13cc.chunk.js.map": "/optimal-truck-route/static/js/2.d18b13cc.chunk.js.map",
+    "index.html": "/optimal-truck-route/index.html",
+    "static/css/2.e59a4b52.chunk.css.map": "/optimal-truck-route/static/css/2.e59a4b52.chunk.css.map",
+    "static/css/main.feee7e81.chunk.css.map": "/optimal-truck-route/static/css/main.feee7e81.chunk.css.map",
+    "static/js/2.d18b13cc.chunk.js.LICENSE.txt": "/optimal-truck-route/static/js/2.d18b13cc.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.2e8b2c42.js",
+    "static/css/2.e59a4b52.chunk.css",
+    "static/js/2.d18b13cc.chunk.js",
+    "static/css/main.feee7e81.chunk.css",
+    "static/js/main.3750f9e6.chunk.js"
+  ]
+}
