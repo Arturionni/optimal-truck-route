@@ -5,7 +5,10 @@ import Map from './Map/';
 import { Space, AutoComplete } from 'antd';
 import HereMapFactory from './Map/HereMapFactory';
 import Features from './components/FeaturesPanel';
+import RouteResultPanel from './components/RouteResultPanel';
 import axios from 'axios'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const { Option } = AutoComplete;
 const apikey = 'TGhya0hGiNEtmGB-diwKpuyzVgEOU6D0Ein9o9BjcK0';
@@ -53,7 +56,10 @@ function App() {
   return (
     <>
       <Map factory={factory} center={center} />
-      <Space direction="vertical" className="space_panel">
+      <Space direction="vertical" className="space_panel left">
+        <RouteResultPanel />
+      </Space>
+      <Space direction="vertical" className="space_panel right">
         <AutoComplete
           placeholder="Поиск по местоположению"
           dropdownMatchSelectWidth={272}
@@ -69,6 +75,10 @@ function App() {
         </AutoComplete>
         <Features factory={factory} />
       </Space>
+      <ToastContainer 
+        position="top-center"
+        hideProgressBar
+      />
     </>
   );
 }

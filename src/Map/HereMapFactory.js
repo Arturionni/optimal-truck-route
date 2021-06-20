@@ -1,57 +1,116 @@
 import { actions } from '../slice'
 import { store } from '../index';
+import { toast } from 'react-toastify';
+
 /* eslint-disab le no-unreachable */
 /* eslint-disable import/no-anonymous-default-export */
+import $ from "jquery";
+
+let markerSVG1 = '<svg xmlns="http://www.w3.org/2000/svg" width="28px" height="36px">' +
+	'<path d="M 19 31 C 19 32.7 16.3 34 13 34 C 9.7 34 7 32.7 7 31 C 7 29.3 9.7 28 13 28 C 16.3 28 19' +
+	' 29.3 19 31 Z" fill="#000" fill-opacity=".2"/>' +
+	'<path d="M 13 0 C 9.5 0 6.3 1.3 3.8 3.8 C 1.4 7.8 0 9.4 0 12.8 C 0 16.3 1.4 19.5 3.8 21.9 L 13 31 L 22.2' +
+	' 21.9 C 24.6 19.5 25.9 16.3 25.9 12.8 C 25.9 9.4 24.6 6.1 22.1 3.8 C 19.7 1.3 16.5 0 13 0 Z" fill="#fff"/>' +
+	'<path d="M 13 2.2 C 6 2.2 2.3 7.2 2.1 12.8 C 2.1 16.1 3.1 18.4 5.2 20.5 L 13 28.2 L 20.8 20.5 C' +
+	' 22.9 18.4 23.8 16.2 23.8 12.8 C 23.6 7.07 20 2.2 13 2.2 Z" fill="#1188DD"/>' +
+	'<text font-size="14" font-weight="bold" fill="#fff" font-family="Nimbus Sans L,sans-serif" text-anchor="middle" x="45%" y="50%">__NO__</text>' +
+	'</svg>';
+
 export default (appCode, slice) => {
 	let map, mapBehavior;
 	const markerLayer = new window.H.map.Group();
-	const polylineLayer = new window.H.map.Group();
+	const routeLayer = new window.H.map.Group();
 	const roadsLayer = new window.H.map.Group();
 	const platform = new window.H.service.Platform({
 		apikey: appCode,
 	});
 	const geocoder = platform.getGeocodingService();
+	let coords = []
 
 	return {
 		appCode,
 		platform,
 		geocoder,
 		map,
+		roadsLayer,
 		getHereMap: (container, mapType, options) => {
 			map = new window.H.Map(container, mapType, options)
 			mapBehavior = new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
 			map.addObject(markerLayer);
-			map.addObject(polylineLayer);
+			map.addObject(routeLayer);
 			map.addObject(roadsLayer);
 
 			return map;
 		},
-		addContextMenus: (map, items = []) => {
-			map.addEventListener('contextmenu', function (e) {
-
+		addContextMenus(map, items = []) {
+			
+			map.addEventListener('contextmenu', (e) => {
 				if (e.target !== map) {
 					return;
 				}
 
-				var coord = map.screenToGeo(e.viewportX, e.viewportY);
+				let coord = map.screenToGeo(e.viewportX, e.viewportY);
 
-				e.items.push(
-					new window.H.util.ContextItem({
-						label: 'Установить начальную точку',
-						callback: function () {
-							map.setCenter(coord, true);
-						}
-					}),
+				if (markerLayer.getObjects().length > 1) {
+					e.items.push(
+						new window.H.util.ContextItem({
+							label: 'Очистить все',
+							callback: this.clear
+							
+						}),
+						new window.H.util.ContextItem({
+							label: 'Перестроить последний маршрут',
+							callback: () => {
+								const routePanel = store.getState().form.routePanel ? store.getState().form.routePanel.values : {} 
+								this.calculateRoute(coords, { 
+									roadSettings: store.getState().form.roadSettings.values,
+									...routePanel
+								 })
+							}
+						}),
+					);
 
-					new window.H.util.ContextItem({
-						label: 'Установить конечную точку',
-						callback: function () {
-							map.setCenter(coord, true);
-						}
-					}),
+				} else if (markerLayer.getObjects().length > 0) {
+					e.items.push(
+						new window.H.util.ContextItem({
+							label: 'Построить маршрут до этого места',
+							callback: () => {
+								coords = []
 
-					...items
-				);
+								this.createWaypointMarker(coord, new window.H.map.Icon(markerSVG1.replace(/__NO__/g, 2).replace(/__NO2__/g, "")))
+
+								markerLayer.forEach(element => {
+									coords.push(element.toGeoJSON().geometry.coordinates)
+									console.log(element)
+								});
+								coords = coords.filter(a => !!a).map(e => ({ lng: e[0], lat: e[1] }))
+
+								const routePanel = store.getState().form.routePanel ? store.getState().form.routePanel.values : {} 
+
+								this.calculateRoute(coords, { 
+									roadSettings: store.getState().form.roadSettings.values,
+									...routePanel
+								 })
+							}
+						}),
+						new window.H.util.ContextItem({
+							label: 'Очистить начальную точку',
+							callback: function () {
+								markerLayer.removeAll();
+							}
+						}),
+					)
+				} else {
+					e.items.push(
+						new window.H.util.ContextItem({
+							label: 'Установить начальную точку',
+							callback: () => {
+								this.createWaypointMarker(coord, new window.H.map.Icon(markerSVG1.replace(/__NO__/g, 1).replace(/__NO2__/g, "")))
+							}
+						}),
+					);
+				}
+
 			});
 		},
 		addRoads(roads) {
@@ -61,14 +120,36 @@ export default (appCode, slice) => {
 				} else {
 					acc[i.color] = [i]
 				}
-				
+
 				return acc
 			}, {})
 
 			for (let i of Object.keys(filtered)) {
 				const layer = new window.H.map.Group()
 				filtered[i].forEach(a => this.addPolylineToMap(layer, a.coords, i))
-				layer.setRemoteId(i) 
+				let cl = [];
+				if (i === '#ed4543' && false) {
+					// cl = filtered[i].map(a => ({ "op": "override", "shape": a.coords.map(c => c.map(v => v.toFixed(5))), "layer": "LINK_ATTRIBUTE_FC4", "data": { "VEHICLE_TYPES": "truck,custom2,custom3,custom4,bicycle", "TRAVEL_DIRECTION": "BOTH" } }))
+					cl = filtered[i].map(a => ({ "op": "override", "shape": a.coords, "layer": "LINK_ATTRIBUTE_FC4", "data": { "VEHICLE_TYPES": "custom2,custom3,custom4,bicycle,carHOV", "TRAVEL_DIRECTION": "BOTH" } }))
+					cl = cl.filter((item, index) => ![65, 467, 616].includes(index))
+					let data;
+					data = new FormData();
+					data.append('overlay_spec', JSON.stringify(cl));
+					$.ajax({
+						url: 'https://fleet.ls.hereapi.com/2/overlays/upload.json?apikey=TGhya0hGiNEtmGB-diwKpuyzVgEOU6D0Ein9o9BjcK0&map_name=OVERLAYBASICDEMO1',
+						data,
+						processData: false,
+						contentType: false,
+						type: 'POST',
+						success: () => {
+						},
+						error: function (xhr, status, e) {
+
+						}
+					});
+				}
+
+				layer.setRemoteId(i)
 				layer.setVisibility()
 				roadsLayer.addObject(layer)
 			}
@@ -82,7 +163,7 @@ export default (appCode, slice) => {
 		},
 		addPolylineToMap(layer, points, strokeColor) {
 			if (points.length > 1 && strokeColor) {
-				var lineString = new window.H.geo.LineString();
+				let lineString = new window.H.geo.LineString();
 
 				points.forEach(p => lineString.pushPoint({ lat: p[0], lng: p[1] }))
 
@@ -96,45 +177,17 @@ export default (appCode, slice) => {
 				layer.addObject(marker);
 			}
 		},
-		calcRoute(map) {
-			const platform = this.getPlatform()
-			const router = platform.getRoutingService(null, 8);
-
-			const routingParameters = {
-				'routingMode': 'fast',
-				'transportMode': 'truck',
-				'origin': '50.1120423728813,8.68340740740811',
-				'destination': '52.5309916298853,13.3846220493377',
-				'return': 'polyline'
-			};
-
-			router.calculateRoute(routingParameters, (result) => {
-				if (result.routes.length) {
-					result.routes[0].sections.forEach((section) => {
-						let linestring = window.H.geo.LineString.fromFlexiblePolyline(section.polyline);
-
-						let routeLine = new window.H.map.Polyline(linestring, {
-							style: { strokeColor: 'blue', lineWidth: 3 }
-						});
-
-						map.addObjects([routeLine]);
-
-						map.getViewModel().setLookAtData({ bounds: routeLine.getBoundingBox() });
-					});
-				}
-			})
-		},
 		clear() {
 			markerLayer.removeAll();
-			polylineLayer.removeAll();
-			store.dispatch(actions.setPolylineLayer(polylineLayer.getObjects().length))
+			routeLayer.removeAll();
+			store.dispatch(actions.clearRouteInfo())
 		},
 		startRouting(form) {
 			const { from, to } = form;
 			let gFrom, gTo;
 			markerLayer.removeAll();
-			polylineLayer.removeAll();
-			store.dispatch(actions.setPolylineLayer(polylineLayer.getObjects().length))
+			routeLayer.removeAll();
+			// store.dispatch(actions.setPolylineLayer(routeLayer.getObjects().length))
 
 			if (from && to) {
 				gFrom = null;
@@ -149,8 +202,11 @@ export default (appCode, slice) => {
 					}
 					gFrom.lat = gFrom.Latitude;
 					gFrom.lng = gFrom.Longitude;
+					
+					this.createWaypointMarker(gFrom, new window.H.map.Icon(markerSVG1.replace(/__NO__/g, 1).replace(/__NO2__/g, "")))
 
 					this.calculateRoute([gFrom, gTo], form);
+
 				});
 
 				geocoder.search({ searchText: to }, (result) => {
@@ -163,75 +219,20 @@ export default (appCode, slice) => {
 					gTo.lat = gTo.Latitude;
 					gTo.lng = gTo.Longitude;
 
+					this.createWaypointMarker(gTo, new window.H.map.Icon(markerSVG1.replace(/__NO__/g, 2).replace(/__NO2__/g, "")))
+
 					this.calculateRoute([gFrom, gTo], form);
 				});
 			}
 		},
 		calculateRoute(wPoints, form) {
-			const router = platform.getRoutingService();
-
 			if (wPoints.length === 2 && (!wPoints[0] || !wPoints[1])) return;
 
-			let tunnelCategory = '';
-
-			let hazard = []
-
-			if (form.special) {
-				if (form.special.combustible) {
-					hazard.push('combustible');
-					tunnelCategory = 'D';
-				}
-				if (form.special.organic) {
-					hazard.push('organic');
-					tunnelCategory = 'D';
-				}
-				if (form.special.poison) {
-					hazard.push('poison');
-					tunnelCategory = 'D';
-				}
-				if (form.special.radioActive) {
-					hazard.push('radioActive');
-					tunnelCategory = 'D';
-				}
-				if (form.special.corrosive) {
-					hazard.push('corrosive');
-					tunnelCategory = 'D';
-				}
-				if (form.special.poisonousInhalation) {
-					hazard.push('poisonousInhalation');
-					tunnelCategory = 'D';
-				}
-				if (form.special.harmfulToWater) {
-					hazard.push('harmfulToWater');
-					tunnelCategory = 'D';
-				}
-				if (form.special.other) {
-					hazard.push('other');
-					tunnelCategory = 'D';
-				}
-	
-				if (form.special.gas) {
-					hazard.push('gas');
-					if (tunnelCategory != 'D')
-						tunnelCategory = 'E';
-				}
-	
-				if (form.special.flammable) {
-					hazard.push('flammable');
-					tunnelCategory = 'C';
-				}
-	
-				if (form.special.explosive) {
-					hazard.push('explosive');
-					tunnelCategory = 'B';
-				}
-			}
-
-			var lWeight
-			var aWeight = parseFloat(form.weightPerAxel);
-			var h = parseFloat(form.height);
-			var w = parseFloat(form.width);
-			var l = parseFloat(form.length);
+			let lWeight = parseFloat(form.limitedWeight);
+			let aWeight = parseFloat(form.weightPerAxle);
+			let h = parseFloat(form.height);
+			let w = parseFloat(form.width);
+			let l = parseFloat(form.length);
 
 			if (isNaN(lWeight)) lWeight = 0;
 			if (isNaN(aWeight)) aWeight = 0;
@@ -239,21 +240,12 @@ export default (appCode, slice) => {
 			if (isNaN(w)) w = 0;
 			if (isNaN(l)) l = 0;
 
-
 			const calculateRouteParams = {
+				apikey: appCode,
 				units: 'metric',
-				lang: 'ru-RU',
-				mode: 'fastest;truck',
-				routeattributes: 'waypoints,summary,shape,legs',
-				// 'representation' : 'overview',
-				// 'routeattributes' : 'wp,sc,sm,sh,bb,lg,no,shape',
-				// 'legattributes' : 'wp,mn,li,le,tt',
-				// 'maneuverattributes' : 'po,sh,tt,le,ti,li,pt,pl,rn,nr,di',
-				// 'linkattributes' : 'sh,le,sl,ds,tr',
-				// 'instructionformat' : 'html',
-				shippedhazardousgoods : hazard.join(','),
-				// tunnelCategory,
-				// trailersCount,
+				mode: 'truck',
+				routeAttributes: 'sh',
+				overlays: 'OVERLAYBASICDEMO1'
 			};
 
 			for (let iW = 0, lW = wPoints.length; iW < lW; iW++) {
@@ -271,90 +263,91 @@ export default (appCode, slice) => {
 			if (l > 0)
 				calculateRouteParams.length = l;
 
-			router.calculateRoute(calculateRouteParams, ({ response: { route } }) => {
-				const lineString = new window.H.geo.LineString();
-				const waypoints = route[0].waypoint
-				const shape = route[0].shape
+			let acceptModes = []
 
-				for (let i = 0; i < shape.length; i++) {
-					var parts = shape[i].split(',');
-					lineString.pushPoint({ lat: parts[0], lng: parts[1] });
-					for (var iW = 0, lW = waypoints.length; iW < lW; iW++) {
-						var wPos = waypoints[iW].mappedPosition;
-						if (wPos.latitude == parts[0] && wPos.longitude == parts[1]) waypoints[iW].idxInStrip = i;
+			for (const i of Object.entries(form.roadSettings)) {
+				if (i[1] === 'true') {
+					switch (i[0]) {
+						case '#ed4543':
+							acceptModes.push('custom1')
+							break;
+						case '#feb039':
+							acceptModes.push('custom2')
+							break;
+						case '#786d9c':
+							acceptModes.push('custom3')
+							break;
+						case '#9f2b29':
+							acceptModes.push('custom4')
+							break;
+						default: break
 					}
 				}
+			}
 
-				let waypointMarkers = [];
-				for (var iW = 0, lW = waypoints.length; iW < lW; iW++) {
-					var wPos = new window.H.geo.Point(waypoints[iW].mappedPosition.latitude, waypoints[iW].mappedPosition.longitude);
-					if (!window.calcRouteTimeOutId) {
-						waypointMarkers.push(this.createWaypointMarker(wPos, wPos.lat.toFixed(5) + ", " + wPos.lng.toFixed(5), "" + (iW + 1)));
+			if (acceptModes.length > 0) {
+				calculateRouteParams.mode = calculateRouteParams.mode + ',' + acceptModes.join(',')
+			} else {
+				calculateRouteParams.mode += ',carHOV'
+			}
+
+			toast.dark('Ожидайте...', {
+				closeOnClick: false,
+				progress: undefined,
+			});
+
+			$.ajax({
+				url: 'https://fleet.ls.hereapi.com/2/calculateroute.json',
+				dataType: "json",
+				data: calculateRouteParams,
+				async: true,
+				type: 'get',
+				success: ({ response: { route } }) => {
+					toast.dismiss()
+
+					const lineString = new window.H.geo.LineString();
+					const waypoints = route[0].waypoint
+					const shape = route[0].shape
+					const routeInfo = route[0].summary
+
+					store.dispatch(actions.setRouteInfo(routeInfo || {}))
+
+					for (let i = 0; i < shape.length; i = i + 2) {
+						lineString.pushPoint({ lat: shape[i], lng: shape[i + 1] });
+						for (let iW = 0, lW = waypoints.length; iW < lW; iW++) {
+							let wPos = waypoints[iW].mappedPosition;
+							if (wPos.latitude == shape[i] && wPos.longitude == shape[i + 1]) waypoints[iW].idxInStrip = i;
+						}
 					}
+
+					// for (let iW = 0, lW = waypoints.length; iW < lW; iW++) {
+					// 	let wPos = new window.H.geo.Point(waypoints[iW].mappedPosition.latitude, waypoints[iW].mappedPosition.longitude);
+					// 	this.createWaypointMarker(wPos);
+					// }
+
+					routeLayer.addObject(new window.H.map.Polyline(lineString, { style: { lineWidth: 4 } }))
+
+					window.map.getViewModel().setLookAtData({
+						bounds: routeLayer.getBoundingBox()
+					});
+					
+					toast.success("Маршрут построен успешно!");
+				},
+				error: (xhr, status, e) => {
+					toast.dismiss()
+
+					toast.error("Невозможно построить маршрут");
+					routeLayer.removeAll()
 				}
-
-				polylineLayer.addObject(new window.H.map.Polyline(lineString, { style: { lineWidth: 4 }}))
-				store.dispatch(actions.setPolylineLayer(polylineLayer.getObjects().length))
-
-				window.map.getViewModel().setLookAtData({
-					bounds: polylineLayer.getBoundingBox()
-				});
 			});
 		},
-		createWaypointMarker(geocoord, info1, info2) {
-			info1 = info1 ? info1 : "";
-			info2 = info2 ? info2 : "";
-
-			var marker = new window.H.map.Marker({ lat: geocoord.lat, lng: geocoord.lng }, {
-				volatility: true
-			});
-			// marker.draggable = true;
-			// marker.addEventListener("dragstart", 
-			// 	function(evt){
-			// 		mapBehavior.disable();
-			// 	}, false);
-
-			// marker.addEventListener("drag", function(evt){
-
-			// 	var curMarker = evt.currentTarget,
-			// 	coord = map.screenToGeo((evt.pointers[0].viewportX), (evt.pointers[0].viewportY));
-
-			// 	curMarker.setGeometry(coord);
-			// 	var	routeInfo = curMarker.getData(),
-			// 		waypointMarkers = routeInfo.waypointMarkers,
-			// 		waipoints = [];
-
-			// 	for(var iW=0,lW=waypointMarkers.length; iW<lW; iW++){
-			// 		waipoints.push(waypointMarkers[iW].getGeometry());
-			// 	}
-			// 	calculateSampleRoute(waipoints, routeInfo.idxW);
-			// }, false);
-
-			// marker.addEventListener("dragend", function(evt){
-			// 	mapBehavior.enable();
-
-			// 	var curMarker = evt.currentTarget;
-			// 	var coord = map.screenToGeo((evt.pointers[0].viewportX ), (evt.pointers[0].viewportY ));
-
-			// 	curMarker.setGeometry(coord);
-
-			// 	var routeInfo = curMarker.getData();
-			// 	var waypointMarkers = routeInfo.waypointMarkers;
-			// 	var wPoints = [];
-
-			// 	for(var iW=0,lW=waypointMarkers.length; iW<lW; iW++){
-			// 		var wPos = waypointMarkers[iW].getGeometry();
-			// 		wPoints.push(waypointMarkers[iW].getGeometry());
-			// 	}
-			// 	calculateRoute(wPoints);
-			// 	removeAllRouteObjects(routeInfo);
-
-			// }, false);
-
-			// Add marker to the markerLayer, to make it visible on the map
-			markerLayer.addObject(marker);
-			
-			return marker;
+		createWaypointMarker(geocoord, icon) {
+			if (geocoord.lat && geocoord.lng) {
+				let marker = new window.H.map.Marker({ lat: geocoord.lat, lng: geocoord.lng }, {
+					icon
+				});
+				markerLayer.addObject(marker);
+			}
 		}
 	};
 };

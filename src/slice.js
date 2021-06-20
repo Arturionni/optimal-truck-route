@@ -3,12 +3,15 @@ import { createSlice } from '@reduxjs/toolkit'
 export const slice = createSlice({
   name: 'slice',
   initialState: {
-    polylineLayer: 0,
+    routeInfo: {}
   },
   reducers: {
-	  setPolylineLayer: (state, action) => {
-		state.polylineLayer = action.payload
-	  }
+    setRouteInfo: (state, action) => {
+      state.routeInfo = action.payload
+    },
+    clearRouteInfo: (state) => {
+      state.routeInfo = {}
+    }
   },
 })
 

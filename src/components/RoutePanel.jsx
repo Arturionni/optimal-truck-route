@@ -48,11 +48,12 @@ const RoutePanel = ({ handleSubmit, factory, change }) => {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchTerm2, setSearchTerm2] = useState('');
 	const count = useSelector(state => state.main.polylineLayer)
+	const roadSettings = useSelector(state => state.form.roadSettings)
 	const debouncedSearchTerm = useDebounce(searchTerm, 500);
 	const debouncedSearchTerm2 = useDebounce(searchTerm2, 500);
 
 	const submit = (data) => {
-		factory.startRouting(data)
+		factory.startRouting({...data, roadSettings: roadSettings.values })
 	}
 
 	const onFromSelect = (data) => {
@@ -77,7 +78,7 @@ const RoutePanel = ({ handleSubmit, factory, change }) => {
 	}
 
 	useEffect(() => {
-		if (debouncedSearchTerm.length > 2) {
+		if (debouncedSearchTerm.length > 1) {
 			setSuggestions([])
 			factory.geocoder.search({ searchText: debouncedSearchTerm }, (result) => {
 				if (result.Response.View.length > 0 && result.Response.View[0].Result[0].Location != null) {
@@ -94,7 +95,7 @@ const RoutePanel = ({ handleSubmit, factory, change }) => {
 	}, [debouncedSearchTerm])
 
 	useEffect(() => {
-		if (debouncedSearchTerm2.length > 2) {
+		if (debouncedSearchTerm2.length > 1) {
 			setSuggestions2([])
 			factory.geocoder.search({ searchText: debouncedSearchTerm2 }, (result) => {
 				if (result.Response.View.length > 0 && result.Response.View[0].Result[0].Location != null) {
@@ -129,21 +130,6 @@ const RoutePanel = ({ handleSubmit, factory, change }) => {
 		>
 			{suggestions2 && suggestions2.map((item) => <Option key={item.i} value={item.label}>{item.label}</Option>)}
 		</AutoComplete>
-		<div className="route_panel_settings_special">
-			<div className="route_panel_settings_special_text">Особый груз:</div>
-			<Field
-				name="special"
-				className="tree_select"
-				component={ATreeSelect}
-				dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-				placeholder="Выберите тип груза"
-				allowClear
-				multiple
-				treeDefaultExpandAll
-			>
-				{options && options.map(item => <TreeNode value={item.value} title={item.label} />)}
-			</Field>
-		</div>
 		<div className="route_panel_settings">
 			<div className="route_panel_settings_item">
 				<div className="route_panel_settings_item_text">Длина, м</div>
@@ -159,11 +145,11 @@ const RoutePanel = ({ handleSubmit, factory, change }) => {
 			</div>
 			<div className="route_panel_settings_item">
 				<div className="route_panel_settings_item_text">Фактическая масса, т</div>
-				<Field name="weight" component={AInputNumber} min={1} />
+				<Field name="limitedWeight" component={AInputNumber} min={1} />
 			</div>
 			<div className="route_panel_settings_item">
 				<div className="route_panel_settings_item_text">Максимальная нагрузка на ось, т</div>
-				<Field name="weightPerAxel" component={AInputNumber} min={1} />
+				<Field name="weightPerAxle" component={AInputNumber} min={1} />
 			</div>
 		</div>
 		{

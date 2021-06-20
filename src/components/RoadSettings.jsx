@@ -36,7 +36,6 @@ const RoadSettings = ({ factory }) => {
 		<SwitchComponent color={enums.lilac}>Локальный дефект</SwitchComponent>
 		<SwitchComponent color={enums.burgundy}>Очаг аварийности</SwitchComponent>
 		<SwitchComponent color={enums.yellow}>В планах ремонта</SwitchComponent>
-		<SwitchComponent color={enums.pink}>Дороги по БКАД</SwitchComponent>
 	</div>
 }
 
@@ -49,6 +48,5 @@ export default reduxForm({
 		[enums.lilac.code]: 'false',
 		[enums.burgundy.code]: 'false',
 		[enums.yellow.code]: 'false',
-		[enums.pink.code]: 'false',
 	}
  })(RoadSettings)

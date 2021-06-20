@@ -1,8 +1,27 @@
 .space_panel { 
 	position: absolute; 
 	top: 1rem;
+}
+
+.space_panel.left { 
+	top: 3rem;
+	left: 3rem;
+}
+
+.info_title {
+	font-size: 1.3rem;
+	font-weight: 700;
+	margin-bottom: .5rem
+}
+
+.info_desc {
+	font-size: 1rem;
+	display: flex;
+	justify-content: space-between;
+}
+
+.space_panel.right { 
 	right: 3rem;
-	height: 100%;
 }
 
 .space_panel_search {
@@ -29,7 +48,7 @@
 .route_panel_settings {
 	display: flex;
 	margin: 1rem 0;
-	width: 15rem;
+	width: 20rem;
 	flex-direction: column;
 	align-items: center;
 }
@@ -82,7 +101,9 @@
 	min-height: 100%;
 }
 
-
+.mr5 {
+	margin-right: .5rem;
+}
 
 
 
