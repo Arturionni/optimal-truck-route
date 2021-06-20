@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Input, Button } from 'antd';
-import { TreeSelect, AutoComplete } from 'antd';
+import { Button } from 'antd';
+import { AutoComplete, Input } from 'antd';
 import { Field, reduxForm } from "redux-form";
-import { AInput, AInputNumber, ATreeSelect } from '../combineAnt';
+import { AInputNumber } from '../combineAnt';
 import { useSelector } from 'react-redux'
 
 const { Option } = AutoComplete;
-
-const { TreeNode } = TreeSelect;
 
 const useDebounce = (value, delay) => {
 	const [debouncedValue, setDebouncedValue] = useState(value);
@@ -27,20 +25,6 @@ const useDebounce = (value, delay) => {
 
 	return debouncedValue;
 }
-
-const options = [
-	{ label: 'Взрывной', value: 'explosive' },
-	{ label: 'Органический', value: 'organic' },
-	{ label: 'Ядовитый', value: 'poisonousInh' },
-	{ label: 'Газ', value: 'gas' },
-	{ label: 'Яд', value: 'poison' },
-	{ label: 'Вред от воды', value: 'waterHarm' },
-	{ label: 'Легковоспламеняющийся', value: 'flammable' },
-	{ label: 'Радиоактивный', value: 'radioActive' },
-	{ label: 'Горючий', value: 'combustible' },
-	{ label: 'Разъедающий', value: 'corrosive' },
-	{ label: 'Другие', value: 'other' },
-];
 
 const RoutePanel = ({ handleSubmit, factory, change }) => {
 	const [suggestions, setSuggestions] = useState([]);
@@ -130,6 +114,7 @@ const RoutePanel = ({ handleSubmit, factory, change }) => {
 		>
 			{suggestions2 && suggestions2.map((item) => <Option key={item.i} value={item.label}>{item.label}</Option>)}
 		</AutoComplete>
+		<Input placeholder='Гос. номер' />
 		<div className="route_panel_settings">
 			<div className="route_panel_settings_item">
 				<div className="route_panel_settings_item_text">Длина, м</div>
