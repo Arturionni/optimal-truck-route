@@ -4,8 +4,8 @@ import { useSelector } from 'react-redux'
 const RouteResultPanel = () => {
 	const routeInfo = useSelector(state => state.main.routeInfo);
 
-	const time = useMemo(() => routeInfo.baseTime && routeInfo.baseTime / 60, [routeInfo])
-	const distance = useMemo(() => routeInfo.distance && routeInfo.distance / 1000, [routeInfo])
+	const time = useMemo(() => routeInfo.baseTime && parseFloat(routeInfo.baseTime / 60).toFixed(0), [routeInfo])
+	const distance = useMemo(() => routeInfo.distance && parseFloat(routeInfo.distance / 1000).toFixed(2), [routeInfo])
 	
 	if (!time && !distance) return null;
 
