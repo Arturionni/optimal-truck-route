@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/optimal-truck-route/static/css/main.feee7e81.chunk.css",
-    "main.js": "/optimal-truck-route/static/js/main.322e4a6d.chunk.js",
-    "main.js.map": "/optimal-truck-route/static/js/main.322e4a6d.chunk.js.map",
+    "main.js": "/optimal-truck-route/static/js/main.8c60cd24.chunk.js",
+    "main.js.map": "/optimal-truck-route/static/js/main.8c60cd24.chunk.js.map",
     "runtime-main.js": "/optimal-truck-route/static/js/runtime-main.2e8b2c42.js",
     "runtime-main.js.map": "/optimal-truck-route/static/js/runtime-main.2e8b2c42.js.map",
     "static/css/2.e59a4b52.chunk.css": "/optimal-truck-route/static/css/2.e59a4b52.chunk.css",
@@ -18,6 +18,6 @@
     "static/css/2.e59a4b52.chunk.css",
     "static/js/2.d18b13cc.chunk.js",
     "static/css/main.feee7e81.chunk.css",
-    "static/js/main.322e4a6d.chunk.js"
+    "static/js/main.8c60cd24.chunk.js"
   ]
 }
