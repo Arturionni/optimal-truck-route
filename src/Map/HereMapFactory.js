@@ -358,8 +358,47 @@ export default (appCode, slice) => {
 		createWaypointMarker(geocoord, icon) {
 			if (geocoord.lat && geocoord.lng) {
 				let marker = new window.H.map.Marker({ lat: geocoord.lat, lng: geocoord.lng }, {
-					icon
+					icon,
+					volatility: true
 				});
+
+				marker.draggable = true;
+
+				marker.addEventListener("dragstart", 
+					function(evt){
+						mapBehavior.disable();
+					}, false);
+		
+				marker.addEventListener("drag", function(evt){
+		
+					var curMarker = evt.currentTarget,
+					coord = map.screenToGeo((evt.pointers[0].viewportX), (evt.pointers[0].viewportY));
+		
+					curMarker.setGeometry(coord);
+				}, false);
+		
+				marker.addEventListener("dragend", (evt) => {
+					mapBehavior.enable();
+		
+					var curMarker = evt.currentTarget;
+					var coord = map.screenToGeo((evt.pointers[0].viewportX ), (evt.pointers[0].viewportY ));
+		
+					curMarker.setGeometry(coord);
+		
+					const routePanel = store.getState().form.routePanel ? store.getState().form.routePanel.values : {} 
+					routeLayer.removeAll();
+					coords = []
+					markerLayer.forEach(element => {
+						coords.push(element.toGeoJSON().geometry.coordinates)
+					});
+					coords = coords.filter(a => !!a).map(e => ({ lng: e[0], lat: e[1] }))
+					this.calculateRoute(coords, { 
+						roadSettings: store.getState().form.roadSettings.values,
+						...routePanel
+					})
+
+				}, false);
+
 				markerLayer.addObject(marker);
 			}
 		}
