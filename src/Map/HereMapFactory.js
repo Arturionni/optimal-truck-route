@@ -73,6 +73,11 @@ export default (appCode, slice) => {
 							callback: () => {
 								const routePanel = store.getState().form.routePanel ? store.getState().form.routePanel.values : {} 
 								routeLayer.removeAll();
+								coords = []
+								markerLayer.forEach(element => {
+									coords.push(element.toGeoJSON().geometry.coordinates)
+								});
+								coords = coords.filter(a => !!a).map(e => ({ lng: e[0], lat: e[1] }))
 								this.calculateRoute(coords, { 
 									roadSettings: store.getState().form.roadSettings.values,
 									...routePanel
@@ -92,7 +97,6 @@ export default (appCode, slice) => {
 
 								markerLayer.forEach(element => {
 									coords.push(element.toGeoJSON().geometry.coordinates)
-									console.log(element)
 								});
 								coords = coords.filter(a => !!a).map(e => ({ lng: e[0], lat: e[1] }))
 
@@ -184,8 +188,9 @@ export default (appCode, slice) => {
 			}
 
 			if (points.length === 1 && strokeColor) {
+				
 				const marker = new window.H.map.Marker({ lat: points[0][0], lng: points[0][1] }, {
-					icon: new window.H.map.Icon(markerSVG2.replace(/__NO__/g, "").replace(/__NO2__/g, ""))
+					icon: new window.H.map.Icon(markerSVG2.replace(/__NO__/g, "").replace(/__NO2__/g, "").replace('#FF7D33', strokeColor))
 				});
 				layer.addObject(marker);
 			}
@@ -200,7 +205,6 @@ export default (appCode, slice) => {
 			let gFrom, gTo;
 			markerLayer.removeAll();
 			routeLayer.removeAll();
-			// store.dispatch(actions.setPolylineLayer(routeLayer.getObjects().length))
 
 			if (from && to) {
 				gFrom = null;
@@ -332,11 +336,6 @@ export default (appCode, slice) => {
 							if (wPos.latitude == shape[i] && wPos.longitude == shape[i + 1]) waypoints[iW].idxInStrip = i;
 						}
 					}
-
-					// for (let iW = 0, lW = waypoints.length; iW < lW; iW++) {
-					// 	let wPos = new window.H.geo.Point(waypoints[iW].mappedPosition.latitude, waypoints[iW].mappedPosition.longitude);
-					// 	this.createWaypointMarker(wPos);
-					// }
 
 					routeLayer.addObject(new window.H.map.Polyline(lineString, { style: { lineWidth: 5 } }))
 
