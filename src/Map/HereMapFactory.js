@@ -16,6 +16,16 @@ let markerSVG1 = '<svg xmlns="http://www.w3.org/2000/svg" width="28px" height="3
 	'<text font-size="14" font-weight="bold" fill="#fff" font-family="Nimbus Sans L,sans-serif" text-anchor="middle" x="45%" y="50%">__NO__</text>' +
 	'</svg>';
 
+let markerSVG2 = '<svg xmlns="http://www.w3.org/2000/svg" width="28px" height="36px">' +
+	'<path d="M 19 31 C 19 32.7 16.3 34 13 34 C 9.7 34 7 32.7 7 31 C 7 29.3 9.7 28 13 28 C 16.3 28 19' +
+	' 29.3 19 31 Z" fill="#000" fill-opacity=".2"/>' +
+	'<path d="M 13 0 C 9.5 0 6.3 1.3 3.8 3.8 C 1.4 7.8 0 9.4 0 12.8 C 0 16.3 1.4 19.5 3.8 21.9 L 13 31 L 22.2' +
+	' 21.9 C 24.6 19.5 25.9 16.3 25.9 12.8 C 25.9 9.4 24.6 6.1 22.1 3.8 C 19.7 1.3 16.5 0 13 0 Z" fill="#fff"/>' +
+	'<path d="M 13 2.2 C 6 2.2 2.3 7.2 2.1 12.8 C 2.1 16.1 3.1 18.4 5.2 20.5 L 13 28.2 L 20.8 20.5 C' +
+	' 22.9 18.4 23.8 16.2 23.8 12.8 C 23.6 7.07 20 2.2 13 2.2 Z" fill="#FF7D33"/>' +
+	'<text font-size="14" font-weight="bold" fill="#fff" font-family="Nimbus Sans L,sans-serif" text-anchor="middle" x="45%" y="50%">__NO__</text>' +
+	'</svg>';
+
 export default (appCode, slice) => {
 	let map, mapBehavior;
 	const markerLayer = new window.H.map.Group();
@@ -62,10 +72,11 @@ export default (appCode, slice) => {
 							label: 'Перестроить последний маршрут',
 							callback: () => {
 								const routePanel = store.getState().form.routePanel ? store.getState().form.routePanel.values : {} 
+								routeLayer.removeAll();
 								this.calculateRoute(coords, { 
 									roadSettings: store.getState().form.roadSettings.values,
 									...routePanel
-								 })
+								})
 							}
 						}),
 					);
@@ -173,7 +184,9 @@ export default (appCode, slice) => {
 			}
 
 			if (points.length === 1 && strokeColor) {
-				const marker = new window.H.map.Marker({ lat: points[0][0], lng: points[0][1] });
+				const marker = new window.H.map.Marker({ lat: points[0][0], lng: points[0][1] }, {
+					icon: new window.H.map.Icon(markerSVG2.replace(/__NO__/g, "").replace(/__NO2__/g, ""))
+				});
 				layer.addObject(marker);
 			}
 		},
@@ -205,7 +218,7 @@ export default (appCode, slice) => {
 					
 					this.createWaypointMarker(gFrom, new window.H.map.Icon(markerSVG1.replace(/__NO__/g, 1).replace(/__NO2__/g, "")))
 
-					this.calculateRoute([gFrom, gTo], form);
+					this.calculateRoute([gFrom, gTo], form, true);
 
 				});
 
@@ -221,11 +234,11 @@ export default (appCode, slice) => {
 
 					this.createWaypointMarker(gTo, new window.H.map.Icon(markerSVG1.replace(/__NO__/g, 2).replace(/__NO2__/g, "")))
 
-					this.calculateRoute([gFrom, gTo], form);
+					this.calculateRoute([gFrom, gTo], form, true);
 				});
 			}
 		},
-		calculateRoute(wPoints, form) {
+		calculateRoute(wPoints, form, fromPanel) {
 			if (wPoints.length === 2 && (!wPoints[0] || !wPoints[1])) return;
 
 			let lWeight = parseFloat(form.limitedWeight);
@@ -325,11 +338,13 @@ export default (appCode, slice) => {
 					// 	this.createWaypointMarker(wPos);
 					// }
 
-					routeLayer.addObject(new window.H.map.Polyline(lineString, { style: { lineWidth: 4 } }))
+					routeLayer.addObject(new window.H.map.Polyline(lineString, { style: { lineWidth: 5 } }))
 
-					window.map.getViewModel().setLookAtData({
-						bounds: routeLayer.getBoundingBox()
-					});
+					if (fromPanel) {
+						window.map.getViewModel().setLookAtData({
+							bounds: routeLayer.getBoundingBox()
+						});
+					}
 					
 					toast.success("Маршрут построен успешно!");
 				},
